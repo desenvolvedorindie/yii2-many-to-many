@@ -1,6 +1,6 @@
 {
-    "name": "arogachev/yii2-many-to-many",
-    "description": "Many-to-many ActiveRecord relation for Yii 2 framework",
+    "name": "antonyz89/yii2-many-to-many",
+    "description": "Many-to-many ActiveRecord relation for Yii 2 framework. Created By Alexey Rogachev",
     "keywords": [
         "yii2",
         "many-to-many",
@@ -26,7 +26,7 @@
     },
     "autoload": {
         "psr-4": {
-            "arogachev\\ManyToMany\\": ""
+            "antonyz89\\ManyToMany\\": ""
         }
     },
     "repositories": [
