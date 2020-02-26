@@ -1,8 +1,8 @@
 <?php
 
-namespace arogachev\ManyToMany\behaviors;
+namespace antonyz89\ManyToMany\behaviors;
 
-use arogachev\ManyToMany\components\ManyToManyRelation;
+use antonyz89\ManyToMany\components\ManyToManyRelation;
 use Yii;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;

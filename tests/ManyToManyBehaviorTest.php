@@ -2,7 +2,7 @@
 
 namespace tests;
 
-use arogachev\ManyToMany\behaviors\ManyToManyBehavior;
+use antonyz89\ManyToMany\behaviors\ManyToManyBehavior;
 use tests\models\Test;
 use tests\models\User;
 
@@ -419,7 +419,7 @@ class ManyToManyBehaviorTest extends DatabaseTestCase
      * Find test model by id and optionally change users relation config
      * @param integer $id
      * @param array $additionalUsersRelationConfig
-     * @return Test|\arogachev\ManyToMany\behaviors\ManyToManyBehavior
+     * @return Test|\antonyz89\ManyToMany\behaviors\ManyToManyBehavior
      */
     protected function findTestModel($id, $additionalUsersRelationConfig = [])
     {
@@ -430,9 +430,9 @@ class ManyToManyBehaviorTest extends DatabaseTestCase
 
     /**
      * Use alternative config - relation via table
-     * @param Test|\arogachev\ManyToMany\behaviors\ManyToManyBehavior $test
+     * @param Test|\antonyz89\ManyToMany\behaviors\ManyToManyBehavior $test
      * @param array $additionalUsersRelationConfig
-     * @return Test|\arogachev\ManyToMany\behaviors\ManyToManyBehavior
+     * @return Test|\antonyz89\ManyToMany\behaviors\ManyToManyBehavior
      */
     protected function useRelationViaTable($test, $additionalUsersRelationConfig = [])
     {
@@ -458,9 +458,9 @@ class ManyToManyBehaviorTest extends DatabaseTestCase
 
     /**
      * Use alternative config - relation via relation
-     * @param Test|\arogachev\ManyToMany\behaviors\ManyToManyBehavior $test
+     * @param Test|\antonyz89\ManyToMany\behaviors\ManyToManyBehavior $test
      * @param array $additionalUsersRelationConfig
-     * @return Test|\arogachev\ManyToMany\behaviors\ManyToManyBehavior
+     * @return Test|\antonyz89\ManyToMany\behaviors\ManyToManyBehavior
      */
     protected function useRelationViaRelation($test, $additionalUsersRelationConfig = [])
     {
@@ -486,7 +486,7 @@ class ManyToManyBehaviorTest extends DatabaseTestCase
 
     /**
      * Check if relation configs are equal
-     * @param \arogachev\ManyToMany\components\ManyToManyRelation $relation
+     * @param \antonyz89\ManyToMany\components\ManyToManyRelation $relation
      */
     protected function assertRelationConfigsEqual($relation)
     {

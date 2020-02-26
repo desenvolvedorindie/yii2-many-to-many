@@ -1,6 +1,6 @@
 <?php
 
-namespace arogachev\ManyToMany\components;
+namespace antonyz89\ManyToMany\components;
 
 use Yii;
 use yii\base\BaseObject;

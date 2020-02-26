@@ -2,8 +2,8 @@
 
 namespace tests\models;
 
-use arogachev\ManyToMany\behaviors\ManyToManyBehavior;
-use arogachev\ManyToMany\validators\ManyToManyValidator;
+use antonyz89\ManyToMany\behaviors\ManyToManyBehavior;
+use antonyz89\ManyToMany\validators\ManyToManyValidator;
 use yii\db\ActiveRecord;
 
 /**

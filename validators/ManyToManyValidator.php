@@ -1,8 +1,8 @@
 <?php
 
-namespace arogachev\ManyToMany\validators;
+namespace antonyz89\ManyToMany\validators;
 
-use arogachev\ManyToMany\behaviors\ManyToManyBehavior;
+use antonyz89\ManyToMany\behaviors\ManyToManyBehavior;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\i18n\PhpMessageSource;
@@ -54,7 +54,7 @@ class ManyToManyValidator extends Validator
             throw new InvalidConfigException("Behavior not detected.");
         }
 
-        /* @var $relation null|\arogachev\ManyToMany\components\ManyToManyRelation */
+        /* @var $relation null|\antonyz89\ManyToMany\components\ManyToManyRelation */
         $relation = null;
 
         foreach ($behavior->getManyToManyRelations() as $attachedRelation) {

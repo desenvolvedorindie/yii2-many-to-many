@@ -26,13 +26,13 @@ The preferred way to install this extension is through [composer](http://getcomp
 Either run
 
 ```
-php composer.phar require --prefer-dist arogachev/yii2-many-to-many
+php composer.phar require --prefer-dist antonyz89/yii2-many-to-many
 ```
 
 or add
 
 ```
-"arogachev/yii2-many-to-many": "0.2.*"
+"antonyz89/yii2-many-to-many": "0.3.*"
 ```
 
 to the require section of your `composer.json` file.
@@ -64,7 +64,7 @@ It will store primary keys of related records during update.
 First way is to explicitly specify all parameters:
 
 ```php
-use arogachev\ManyToMany\behaviors\ManyToManyBehavior;
+use antonyz89\ManyToMany\behaviors\ManyToManyBehavior;
 
 /**
  * @inheritdoc
@@ -88,150 +88,6 @@ public function behaviors()
 }
 ```
 
-But more often we also need to display related models,
-so it's better to define relation for that and use it for both display and behavior configuration.
-Both ways (```via``` and ```viaTable```) are considered valid:
-
-Using ```viaTable```:
-
-```php
-/**
- * @return \yii\db\ActiveQuery
- */
-public function getUsers()
-{
-    return $this->hasMany(User::className(), ['id' => 'user_id'])
-        ->viaTable('tests_to_users', ['test_id' => 'id'])
-        ->orderBy('name');
-}
-```
-
-Using ```via``` (requires additional model for junction table):
-
-```php
-/**
- * @return \yii\db\ActiveQuery
- */
-public function getTestUsers()
-{
-    return $this->hasMany(TestUser::className(), ['test_id' => 'id']);
-}
-
-/**
- * @return \yii\db\ActiveQuery
- */
-public function getUsers()
-{
-    return $this->hasMany(User::className(), ['id' => 'user_id'])
-        ->via('testUsers')
-        ->orderBy('name');
-}
-```
-
-Order is not required.
-
-Then just pass the name of this relation and all other parameters will be fetched automatically.
-
-```php
-/**
- * @inheritdoc
- */
-public function behaviors()
-{
-    return [
-        [
-            'class' => ManyToManyBehavior::className(),
-            'relations' => [
-                [
-                    'name' => 'users',
-                    // This is the same as in previous example
-                    'editableAttribute' => 'editableUsers',
-                ],
-            ],
-        ],
-    ];
-}
-```
-
-Additional many-to-many relations can be added exactly the same.
-Note that even for one relation you should declare it as a part of `relations` section.
-
-## Filling relations
-
-By default, `editableAttribute` of each found model will be populated with ids of related models (eager loading is
-used). If you want more manual control, prevent extra queries, disable `autoFill` option:
-
-```php
-'autoFill' => false,
-```
-
-and fill it only when it's needed, for example in `update` action of controller. This is recommended way of using.
-
-```php
-public function actionUpdate($id)
-{
-    $model = $this->findModel($id);
-    $model->getManyToManyRelation('users')->fill();
-    // ...
-}
-```
-
-Alternatively you can specify conditions of filling in closure:
-
-```php
-'autoFill' => function ($model) {
-    return $model->scenario == Test::SCENARIO_UPDATE; // boolean value
-}
-```
-
-Even it's possible to do something like this:
-
-```php
-'autoFill' => function ($model) {
-    return Yii::$app->controller->route == 'tests/default/update';
-}
-```
-
-but it's not recommended for usage because model is not appropriate place for handling routes.
-
-## Saving relations without massive assignment
-
-When creating model:
-
-```php
-$model = new Test;
-$model->editableUsers = [1, 2];
-$model->save();
-```
-
-When updating model (`'autoFill' => true`):
-
-```php
-$model = new Test;
-$model->editableUsers = [1, 2];
-$model->save();
-```
-
-When updating model (`'autoFill' => false`, manual filling):
-
-```php
-$model = new Test;
-$model->getManyToManyRelation('users')->fill();
-var_dump($model->editableUsers) // [1, 2]
-$model->editableUsers = [1, 2, 3];
-$model->save();
-```
-
-When updating model (`'autoFill' => false`, without manual filling):
-
-```php
-$model = new Test;
-var_dump($model->editableUsers) // empty array
-$model->save();
-```
-
-In this case many-to-many relations will stay untouched.
-
 ## Adding attribute as safe
 
 Add editable attribute to model rules for massive assignment.
@@ -248,7 +104,7 @@ public function rules()
 Or use custom validator:
 
 ```php
-use arogachev\ManyToMany\validators\ManyToManyValidator;
+use antonyz89\ManyToMany\validators\ManyToManyValidator;
 
 public function rules()
 {
@@ -258,83 +114,3 @@ public function rules()
 
 Validator checks list for being array and containing only primary keys presented in related model.
 It can not be used without attaching `ManyToManyBehavior`.
-
-## Adding control to view
-
-Add control to view for managing related list. Without extensions it can be done with multiple select:
-
-```php
-<?= $form->field($model, 'editableUsers')->dropDownList(User::getList(), ['multiple' => true]) ?>
-```
-
-Example of `getList()` method contents (it needs to be placed in `User` model):
-
-```php
-use yii\helpers\ArrayHelper;
-
-/**
- * @return array
- */
-public static function getList()
-{
-    $models = static::find()->orderBy('name')->all();
-
-    return ArrayHelper::map($models, 'id', 'name');
-}
-```
-
-## Relation features
-
-You can access many-to-many relation like so:
-
-```php
-$relation = $model->getManyToManyRelation('users');
-```
-
-`users` can be value of either `name` or `table` relation property specified in config.
-
-You can fill `editableAttribute` with ids of related records like so:
-
-```php
-$model->getManyToManyRelation('users')->fill();
-```
-
-You can get added and deleted primary keys of related models for specific relation like so:
-
-```php
-$addedPrimaryKeys = $model->getManyToManyRelation('users')->getAddedPrimaryKeys();
-$deletedPrimaryKeys = $model->getManyToManyRelation('users')->getDeletedPrimaryKeys();
-```
-
-Note that they are only available after the model was saved so you can access it after `$model->save()` call
-or in `afterSave()` event handler.
-
-## Running tests
-
-Install dependencies:
-
-```
-composer install
-```
-
-Add database config (`tests/config/db-local.php` file) with following contents:
-
-```php
-<?php
-
-return [
-    'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=localhost;dbname=yii2_many_to_many',
-    'username' => 'root',
-    'password' => '',
-];
-```
-
-You can change `dbname`, `username` and `password` how you want. Make sure create database and user before running
-tests.
-
-Run tests:
-
-```
-vendor/bin/phpunit
-```
