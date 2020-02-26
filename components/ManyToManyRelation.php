@@ -106,14 +106,16 @@ class ManyToManyRelation extends BaseObject
 
                 $valid &= $model->save();
             }
+
+            if ($valid)
+                $transaction->commit();
+            else
+                $transaction->rollBack();
         } catch (\Exception $e) {
             $transaction->rollback();
+            throw $e;
         }
 
-        if ($valid)
-            $transaction->commit();
-        else
-            $transaction->rollBack();
     }
 
     public function update()
