@@ -5,6 +5,7 @@ namespace arogachev\ManyToMany\components;
 use Yii;
 use yii\base\BaseObject;
 use yii\base\InvalidConfigException;
+use yii\db\ActiveRecord;
 use yii\db\Query;
 use yii\helpers\ArrayHelper;
 
@@ -13,17 +14,12 @@ class ManyToManyRelation extends BaseObject
     /**
      * @var string
      */
-    public $name;
-
-    /**
-     * @var string
-     */
     public $editableAttribute;
 
     /**
-     * @var string
+     * @var ActiveRecord
      */
-    public $table;
+    public $modelClass;
 
     /**
      * @var string
@@ -70,39 +66,20 @@ class ManyToManyRelation extends BaseObject
             throw new InvalidConfigException('$editableAttribute is required.');
         }
 
-        if ($this->name) {
-            $query = $this->getQuery();
+        if (!$this->modelClass) {
+            throw new InvalidConfigException('$modelClass is required..');
+        }
 
-            if (is_array($query->via)) {
-                // via
-                /* @var $modelClass \yii\db\ActiveRecord */
-                $modelClass = $query->via[1]->modelClass;
-                $this->table = $modelClass::tableName();
-                $this->ownAttribute = key($query->via[1]->link);
-            } else {
-                // viaTable
-                $this->table = $query->via->from[0];
-                $this->ownAttribute = key($query->via->link);
-            }
+        if (!$this->ownAttribute) {
+            throw new InvalidConfigException('$ownAttribute is required..');
+        }
 
-            $this->relatedModel = $query->modelClass;
-            $this->relatedAttribute = reset($query->link);
-        } else {
-            if (!$this->table) {
-                throw new InvalidConfigException('$table must be explicitly set in case of missing $name.');
-            }
+        if (!$this->relatedModel) {
+            throw new InvalidConfigException('$relatedModel is required..');
+        }
 
-            if (!$this->ownAttribute) {
-                throw new InvalidConfigException('$ownAttribute must be explicitly set in case of missing $name.');
-            }
-
-            if (!$this->relatedModel) {
-                throw new InvalidConfigException('$relatedModel must be explicitly set in case of missing $name.');
-            }
-
-            if (!$this->relatedAttribute) {
-                throw new InvalidConfigException('$relatedAttribute must be explicitly set in case of missing $name.');
-            }
+        if (!$this->relatedAttribute) {
+            throw new InvalidConfigException('$relatedAttribute is required..');
         }
 
         parent::init();
@@ -118,16 +95,25 @@ class ManyToManyRelation extends BaseObject
             return;
         }
 
-        $rows = [];
-        foreach ($primaryKeys as $primaryKey) {
-            $rows[] = [$this->_model->primaryKey, $primaryKey];
+        $transaction = Yii::$app->db->beginTransaction();
+        $valid = true;
+        try {
+            foreach ($primaryKeys as $primaryKey) {
+                /** @var ActiveRecord $model */
+                $model = new $this->modelClass;
+                $model->setAttribute($this->ownAttribute, $this->_model->primaryKey);
+                $model->setAttribute($this->relatedAttribute, $primaryKey);
+
+                $valid &= $model->save();
+            }
+        } catch (\Exception $e) {
+            $transaction->rollback();
         }
 
-        Yii::$app
-            ->db
-            ->createCommand()
-            ->batchInsert($this->table, [$this->ownAttribute, $this->relatedAttribute], $rows)
-            ->execute();
+        if ($valid)
+            $transaction->commit();
+        else
+            $transaction->rollBack();
     }
 
     public function update()
@@ -150,7 +136,7 @@ class ManyToManyRelation extends BaseObject
             return;
         }
 
-        Yii::$app->db->createCommand()->delete($this->table, [
+        Yii::$app->db->createCommand()->delete($this->modelClass::tableName(), [
             $this->ownAttribute => $this->_model->primaryKey,
             $this->relatedAttribute => $primaryKeys,
         ])->execute();
@@ -224,22 +210,13 @@ class ManyToManyRelation extends BaseObject
             return $this->_relatedList;
         }
 
-        if ($this->name) {
-            /* @var $relatedModel \yii\db\ActiveRecord */
-            $relatedModel = $this->relatedModel;
-            $primaryKey = $relatedModel::primaryKey()[0];
+        $rows = (new Query)
+            ->from($this->modelClass::tableName())
+            ->select($this->relatedAttribute)
+            ->where([$this->ownAttribute => $this->_model->primaryKey])
+            ->all();
 
-            $models = $this->_model->{$this->name};
-            $primaryKeys = ArrayHelper::getColumn($models, $primaryKey);
-        } else {
-            $rows = (new Query)
-                ->from($this->table)
-                ->select($this->relatedAttribute)
-                ->where([$this->ownAttribute => $this->_model->primaryKey])
-                ->all();
-
-            $primaryKeys = ArrayHelper::getColumn($rows, $this->relatedAttribute);
-        }
+        $primaryKeys = ArrayHelper::getColumn($rows, $this->relatedAttribute);
 
         $this->_relatedList = $primaryKeys;
 
