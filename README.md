@@ -3,21 +3,19 @@
 Implementation of [Many-to-many relationship](http://en.wikipedia.org/wiki/Many-to-many_%28data_model%29)
 for Yii 2 framework.
 
-[![Latest Stable Version](https://poser.pugx.org/arogachev/yii2-many-to-many/v/stable)](https://packagist.org/packages/arogachev/yii2-many-to-many)
-[![Total Downloads](https://poser.pugx.org/arogachev/yii2-many-to-many/downloads)](https://packagist.org/packages/arogachev/yii2-many-to-many)
-[![Latest Unstable Version](https://poser.pugx.org/arogachev/yii2-many-to-many/v/unstable)](https://packagist.org/packages/arogachev/yii2-many-to-many)
+**Created by [arogachev](https://github.com/arogachev), forked by [AntonyZ89](https://github.com/AntonyZ89)**
+
+[![Latest Stable Version](https://poser.pugx.org/antonyz89/yii2-many-to-many/v/stable)](https://packagist.org/packages/antonyz89/yii2-many-to-many)
+[![Total Downloads](https://poser.pugx.org/antonyz89/yii2-many-to-many/downloads)](https://packagist.org/packages/antonyz89/yii2-many-to-many)
+[![Latest Unstable Version](https://poser.pugx.org/antonyz89/yii2-many-to-many/v/unstable)](https://packagist.org/packages/antonyz89/yii2-many-to-many)
 [![License](https://poser.pugx.org/arogachev/yii2-many-to-many/license)](https://packagist.org/packages/arogachev/yii2-many-to-many)
 
 - [Installation](#installation)
 - [Features](#features)
 - [Creating editable attribute](#creating-editable-attribute)
 - [Attaching and configuring behavior](#attaching-and-configuring-behavior)
-- [Filling relations](#filling-relations)
-- [Saving relations without massive assignment](#saving-relations-without-massive-assignment)
 - [Adding attribute as safe](#adding-attribute-as-safe)
 - [Adding control to view](#adding-control-to-view)
-- [Relation features](#relation-features)
-- [Running tests](#running-tests)
 
 ## Installation
 
@@ -77,7 +75,7 @@ public function behaviors()
             'relations' => [
                 [
                     'editableAttribute' => 'editableUsers', // Editable attribute name
-                    'table' => 'tests_to_users', // Name of the junction table
+                    'modelClass' => Test::class, // Class of current model
                     'ownAttribute' => 'test_id', // Name of the column in junction table that represents current model
                     'relatedModel' => User::className(), // Related model class
                     'relatedAttribute' => 'user_id', // Name of the column in junction table that represents related model
@@ -114,3 +112,27 @@ public function rules()
 
 Validator checks list for being array and containing only primary keys presented in related model.
 It can not be used without attaching `ManyToManyBehavior`.
+
+## Adding control to view
+
+Add control to view for managing related list. Without extensions it can be done with multiple select:
+
+```php
+<?= $form->field($model, 'editableUsers')->dropDownList(User::getList(), ['multiple' => true]) ?>
+```
+
+Example of `getList()` method contents (it needs to be placed in `User` model):
+
+```php
+use yii\helpers\ArrayHelper;
+
+/**
+ * @return array
+ */
+public static function getList()
+{
+    $models = static::find()->orderBy('name')->all();
+
+    return ArrayHelper::map($models, 'id', 'name');
+}
+```
