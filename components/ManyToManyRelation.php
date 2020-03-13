@@ -8,6 +8,8 @@ use yii\base\InvalidConfigException;
 use yii\db\ActiveRecord;
 use yii\db\Query;
 use yii\helpers\ArrayHelper;
+use yii\helpers\Json;
+use yii\widgets\ActiveForm;
 
 class ManyToManyRelation extends BaseObject
 {
@@ -97,6 +99,7 @@ class ManyToManyRelation extends BaseObject
 
         $transaction = Yii::$app->db->beginTransaction();
         $valid = true;
+        $errors = [];
         try {
             foreach ($primaryKeys as $primaryKey) {
                 /** @var ActiveRecord $model */
@@ -104,13 +107,19 @@ class ManyToManyRelation extends BaseObject
                 $model->setAttribute($this->ownAttribute, $this->_model->primaryKey);
                 $model->setAttribute($this->relatedAttribute, $primaryKey);
 
-                $valid &= $model->save();
+
+                $error = $model->save();
+                $valid &= $error;
+                if (!$error)
+                    $errors = ArrayHelper::merge($errors, ActiveForm::validate($model));
             }
 
             if ($valid)
                 $transaction->commit();
-            else
+            else {
                 $transaction->rollBack();
+                throw new InvalidConfigException(Json::encode($errors));
+            }
         } catch (\Exception $e) {
             $transaction->rollback();
             throw $e;
