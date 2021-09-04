@@ -9,7 +9,6 @@ use yii\db\ActiveRecord;
 use yii\db\Query;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
-use yii\widgets\ActiveForm;
 
 class ManyToManyRelation extends BaseObject
 {
@@ -111,7 +110,7 @@ class ManyToManyRelation extends BaseObject
                 $error = $model->save();
                 $valid &= $error;
                 if (!$error)
-                    $errors = ArrayHelper::merge($errors, ActiveForm::validate($model));
+                    $errors = ArrayHelper::merge($errors, $model->errors);
             }
 
             if ($valid)
