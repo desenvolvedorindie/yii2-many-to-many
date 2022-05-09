@@ -96,7 +96,7 @@ class ManyToManyRelation extends BaseObject
             return;
         }
 
-        $transaction = Yii::$app->db->beginTransaction();
+        $transaction = $this->modelClass::getDb()->beginTransaction();
         $valid = true;
         $errors = [];
         try {
@@ -146,10 +146,10 @@ class ManyToManyRelation extends BaseObject
             return;
         }
 
-        Yii::$app->db->createCommand()->delete($this->modelClass::tableName(), [
+        $this->modelClass::deleteAll([
             $this->ownAttribute => $this->_model->primaryKey,
             $this->relatedAttribute => $primaryKeys,
-        ])->execute();
+        ]);
     }
 
     public function autoFill()
