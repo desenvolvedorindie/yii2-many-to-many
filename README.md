@@ -10,12 +10,13 @@ for Yii 2 framework.
 [![Latest Unstable Version](https://poser.pugx.org/antonyz89/yii2-many-to-many/v/unstable)](https://packagist.org/packages/antonyz89/yii2-many-to-many)
 [![License](https://poser.pugx.org/arogachev/yii2-many-to-many/license)](https://packagist.org/packages/arogachev/yii2-many-to-many)
 
-- [Installation](#installation)
-- [Features](#features)
-- [Creating editable attribute](#creating-editable-attribute)
-- [Attaching and configuring behavior](#attaching-and-configuring-behavior)
-- [Adding attribute as safe](#adding-attribute-as-safe)
-- [Adding control to view](#adding-control-to-view)
+- [Yii 2 Many-to-many](#yii-2-many-to-many)
+  - [Installation](#installation)
+  - [Features](#features)
+  - [Creating editable attribute](#creating-editable-attribute)
+  - [Attaching and configuring behavior](#attaching-and-configuring-behavior)
+  - [Attribute validation](#attribute-validation)
+  - [Adding control to view](#adding-control-to-view)
 
 ## Installation
 
@@ -49,10 +50,8 @@ after adding just one, exactly one row will be inserted. If nothing was changed,
 Simply add public property to your `ActiveRecord` model like this:
 
 ```php
-/**
- * @var array
- */
-public $editableUsers = [];
+/** @var int[] */
+public $editableRoles = [];
 ```
 
 It will store primary keys of related records during update.
@@ -62,40 +61,55 @@ It will store primary keys of related records during update.
 First way is to explicitly specify all parameters:
 
 ```php
+namespace common\models;
+
 use antonyz89\ManyToMany\behaviors\ManyToManyBehavior;
 
-/**
- * @inheritdoc
- */
-public function behaviors()
-{
-    return [
-        [
-            'class' => ManyToManyBehavior::className(),
-            'relations' => [
-                [
-                    'editableAttribute' => 'editableUsers', // Editable attribute name
-                    'modelClass' => Test::class, // Class of current model
-                    'ownAttribute' => 'test_id', // Name of the column in junction table that represents current model
-                    'relatedModel' => User::className(), // Related model class
-                    'relatedAttribute' => 'user_id', // Name of the column in junction table that represents related model
+class User extends ActiveRecord {
+
+    /** @var int[] */
+    public $editableRoles = [];
+
+    /**
+     * @inheritdoc
+     */
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => ManyToManyBehavior::class,
+                'relations' => [
+                    [
+                        // Editable attribute name
+                        'editableAttribute' => 'editableRoles', 
+                        // Model of the junction table
+                        'modelClass' => UserRole::class, 
+                        // Name of the column in junction table that represents current model
+                        'ownAttribute' => 'user_id', 
+                        // Related model class
+                        'relatedModel' => Role::class,
+                        // Name of the column in junction table that represents related model
+                        'relatedAttribute' => 'role_id', 
+                    ],
                 ],
             ],
-        ],
-    ];
+        ];
+    }
 }
 ```
 
-## Adding attribute as safe
+## Attribute validation
 
 Add editable attribute to model rules for massive assignment.
-
-Either mark it as safe at least:
 
 ```php
 public function rules()
 {
-    ['editableUsers', 'safe'],
+    ['editableRoles', 'required'],
+    ['editableRoles', 'integer'],
+    ['editableRoles', 'each', 'skipOnEmpty' => false, 'rule' => [
+        'exist', 'skipOnError' => true, 'targetClass' => Role::class, 'targetAttribute' => ['editableRoles' => 'id']
+    ]],
 }
 ```
 
@@ -106,7 +120,7 @@ use antonyz89\ManyToMany\validators\ManyToManyValidator;
 
 public function rules()
 {
-    ['editableUsers', ManyToManyValidator::className()],
+    ['editableRoles', ManyToManyValidator::class],
 }
 ```
 
@@ -118,7 +132,7 @@ It can not be used without attaching `ManyToManyBehavior`.
 Add control to view for managing related list. Without extensions it can be done with multiple select:
 
 ```php
-<?= $form->field($model, 'editableUsers')->dropDownList(User::getList(), ['multiple' => true]) ?>
+<?= $form->field($model, 'editableRoles')->dropDownList(Role::getList(), ['multiple' => true]) ?>
 ```
 
 Example of `getList()` method contents (it needs to be placed in `User` model):
@@ -131,7 +145,7 @@ use yii\helpers\ArrayHelper;
  */
 public static function getList()
 {
-    $models = static::find()->orderBy('name')->all();
+    $models = static::find()->orderBy('name')->asArray()->all();
 
     return ArrayHelper::map($models, 'id', 'name');
 }
