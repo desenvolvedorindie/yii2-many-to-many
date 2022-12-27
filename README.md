@@ -78,6 +78,7 @@ class User extends ActiveRecord {
         return [
             [
                 'class' => ManyToManyBehavior::class,
+                'autoFill' => true # default is true. If false, you should fill manually with $model->fill() method
                 'relations' => [
                     [
                         // Editable attribute name

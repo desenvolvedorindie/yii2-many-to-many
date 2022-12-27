@@ -3,12 +3,13 @@
 namespace antonyz89\ManyToMany\behaviors;
 
 use antonyz89\ManyToMany\components\ManyToManyRelation;
-use Yii;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 
 class ManyToManyBehavior extends Behavior
 {
+
+    public $autoFill = true;
     /**
      * @var array
      */
@@ -42,6 +43,13 @@ class ManyToManyBehavior extends Behavior
     }
 
     public function afterFind()
+    {
+        if ($this->autoFill) {
+            $this->fill();
+        }
+    }
+
+    public function fill()
     {
         foreach ($this->_relations as $relation) {
             $relation->autoFill();
