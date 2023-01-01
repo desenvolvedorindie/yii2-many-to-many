@@ -6,10 +6,30 @@ use antonyz89\ManyToMany\components\ManyToManyRelation;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 
+/**
+ * @property bool $canAutoFill
+ * @property ManyToManyRelation[] $manyToManyRelations
+ */
 class ManyToManyBehavior extends Behavior
 {
 
-    public $autoFill = true;
+    /**
+     * Enable auto fill for all ManyToMany relations
+     * 
+     * @var boolean
+     */
+    public static $enableAutoFill = true;
+
+    /**
+     * Autofill relations on trigger `ActiveRecord::EVENT_AFTER_FIND`
+     * 
+     * if `false`, you need call `$model->fill()` manually
+     * if `null`, the default value will be `static::$enableAutoFill`
+     * 
+     * @var boolean|null
+     */
+    public $autoFill = null;
+
     /**
      * @var array
      */
@@ -44,7 +64,7 @@ class ManyToManyBehavior extends Behavior
 
     public function afterFind()
     {
-        if ($this->autoFill) {
+        if ($this->canAutoFill) {
             $this->fill();
         }
     }
@@ -91,5 +111,10 @@ class ManyToManyBehavior extends Behavior
         }
 
         return null;
+    }
+
+    public function getCanAutoFill()
+    {
+        return $this->autoFill ?? static::$enableAutoFill;
     }
 }

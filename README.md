@@ -151,3 +151,51 @@ public static function getList()
     return ArrayHelper::map($models, 'id', 'name');
 }
 ```
+
+## Global Auto Fill
+
+By default, all ManyToMany relations are auto filled after trigger `ActiveRecord::EVENT_AFTER_FIND` event, but if you want disable this feature and fill relations manually:
+
+```php
+// common\config\bootstrap.php
+
+use antonyz89\ManyToMany\behaviors\ManyToManyBehavior;
+
+ManyToManyBehavior::$enableAutoFill = false;
+```
+
+And set `autoFill` as `true` on behaviors when you want enable auto fill on specific model
+
+```php
+/**
+ * @inheritdoc
+ */
+public function behaviors()
+{
+    return [
+        [
+            'class' => ManyToManyBehavior::class,
+            'autoFill' => true # default is true. If false, you should fill manually with $model->fill() method
+            'relations' => [
+                // ...
+            ],
+        ],
+    ];
+}
+```
+
+If `$enableAutoFill` and `autoFill` are `false` , you should call `$model->fill()` to fill relations manually
+
+```php
+<?php // example/_form.php
+
+/* @var $this View */
+/* @var $model Example */
+
+// fill relations before load the form
+$model->fill();
+?>
+
+<div class="example-form">
+    <!-- ... -->
+```
